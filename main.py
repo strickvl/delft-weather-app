@@ -3,7 +3,8 @@ import requests
 from typing import Optional
 import os
 
-app, rt = fast_app(live=True)
+# Initialize app with proper CSS
+app, rt = fast_app()
 
 def get_delft_sunniness_data() -> Optional[float]:
     """Get current cloud coverage data for Delft, Netherlands using Open-Meteo API.
@@ -31,12 +32,19 @@ def get_delft_sunniness_data() -> Optional[float]:
 @rt("/")
 def get():
     cloud_coverage = get_delft_sunniness_data()
+    
     if cloud_coverage is None:
-        return Div(P("Unable to fetch weather data for Delft"))
-    elif cloud_coverage < 50:  # Less than 50% cloud coverage is considered sunny
-        return Div(P(f"Hello sunny Delft! (Cloud coverage: {cloud_coverage}%)"))
-    else:
-        return Div(P(f"Hello cloudy Delft! (Cloud coverage: {cloud_coverage}%)"))
-
+        return Div({"class": "center-screen"},
+            H1("WEATHER DATA UNAVAILABLE", {"class": "big-text"}),
+            P("Unable to fetch current weather information", {"class": "small-text"})
+        )
+    
+    message = "IT'S SUNNY RIGHT NOW IN DELFT!" if cloud_coverage < 50 else "IT'S CLOUDY RIGHT NOW IN DELFT!"
+    bg_color = "#fef9c3" if cloud_coverage < 50 else "#e5e7eb"  # Light yellow for sunny, light gray for cloudy
+    
+    return Div({"class": "center-screen", "style": f"background-color: {bg_color};"},
+        H1(message, {"class": "big-text"}),
+        P(f"{cloud_coverage}% cloud coverage", {"class": "small-text"})
+    )
 
 serve()
